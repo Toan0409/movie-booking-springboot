@@ -12,6 +12,7 @@ import com.cinema.movie_booking.mapper.CinemaMapper;
 import com.cinema.movie_booking.repository.CinemaRepository;
 import com.cinema.movie_booking.service.CinemaService;
 
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -93,6 +94,16 @@ public class CinemaServiceImpl implements CinemaService {
     public List<CinemaResponseDTO> getActiveCinemas() {
         List<Cinema> cinemas = cinemaRepository.findByIsActiveTrue();
         return cinemas.stream().map(CinemaMapper::toDTO).toList();
+    }
+
+    @Override
+    @Transactional
+    public CinemaResponseDTO restoreCinema(Long cinemaId) {
+        Cinema cinema = cinemaRepository.findById(cinemaId)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay rap"));
+        cinema.setIsActive(true);
+        cinemaRepository.save(cinema);
+        return CinemaMapper.toDTO(cinema);
     }
 
 }

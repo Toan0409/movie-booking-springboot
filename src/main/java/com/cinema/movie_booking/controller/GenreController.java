@@ -2,6 +2,7 @@ package com.cinema.movie_booking.controller;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cinema.movie_booking.dto.api.ApiResponse;
 import com.cinema.movie_booking.dto.genre.GenreRequestDTO;
 import com.cinema.movie_booking.dto.genre.GenreResponseDTO;
 import com.cinema.movie_booking.service.GenreService;
@@ -27,35 +29,41 @@ public class GenreController {
     private final GenreService genreService;
 
     @PostMapping
-    public GenreResponseDTO createGenre(@Valid @RequestBody GenreRequestDTO requestDTO) {
-        System.out.println("NAME ==================== " + requestDTO.getName());
-        return genreService.createGenre(requestDTO);
+    public ResponseEntity<ApiResponse<GenreResponseDTO>> createGenre(@Valid @RequestBody GenreRequestDTO requestDTO) {
+        GenreResponseDTO genreResponseDTO = genreService.createGenre(requestDTO);
+        return ResponseEntity.ok(ApiResponse.success(genreResponseDTO, "Tạo thể loại thành công"));
     }
 
     @GetMapping
-    public Page<GenreResponseDTO> getAll(
+    public ResponseEntity<ApiResponse<Page<GenreResponseDTO>>> getAll(
             @RequestParam(required = false) String keyword, Pageable pageable) {
-        return genreService.getAllGenres(keyword, pageable);
+        Page<GenreResponseDTO> genres = genreService.getAllGenres(keyword, pageable);
+        return ResponseEntity.ok(ApiResponse.success(genres, "Lấy danh sách thể loại thành công"));
     }
 
     @GetMapping("/{id}")
-    public GenreResponseDTO getByID(@PathVariable Long id) {
-        return genreService.getGenreById(id);
+    public ResponseEntity<ApiResponse<GenreResponseDTO>> getByID(@PathVariable Long id) {
+        GenreResponseDTO genreResponseDTO = genreService.getGenreById(id);
+        return ResponseEntity.ok(ApiResponse.success(genreResponseDTO, "Lấy thông tin thể loại thành công"));
     }
 
     @PutMapping("/{id}")
-    public GenreResponseDTO update(@PathVariable Long id, @Valid @RequestBody GenreRequestDTO requestDTO) {
-        return genreService.updateGenre(id, requestDTO);
+    public ResponseEntity<ApiResponse<GenreResponseDTO>> update(@PathVariable Long id,
+            @Valid @RequestBody GenreRequestDTO requestDTO) {
+        GenreResponseDTO genreResponseDTO = genreService.updateGenre(id, requestDTO);
+        return ResponseEntity.ok(ApiResponse.success(genreResponseDTO, "Cập nhật thể loại thành công"));
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         genreService.deleteGenre(id);
+        return ResponseEntity.ok(ApiResponse.success(null, "Xóa thể loại thành công"));
     }
 
     @PatchMapping("/{id}/restore")
-    public GenreResponseDTO restore(@PathVariable Long id) {
-        return genreService.restoreGenre(id);
+    public ResponseEntity<ApiResponse<GenreResponseDTO>> restore(@PathVariable Long id) {
+        GenreResponseDTO genreResponseDTO = genreService.restoreGenre(id);
+        return ResponseEntity.ok(ApiResponse.success(genreResponseDTO, "Khôi phục thể loại thành công"));
     }
 
 }

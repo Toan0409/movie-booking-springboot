@@ -21,4 +21,6 @@ public interface CinemaService {
     List<CinemaResponseDTO> getCinemasByCity(String city);
 
     List<CinemaResponseDTO> getActiveCinemas();
+
+    CinemaResponseDTO restoreCinema(Long cinemaId);
 }

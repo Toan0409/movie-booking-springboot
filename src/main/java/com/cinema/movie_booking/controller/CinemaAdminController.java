@@ -2,61 +2,79 @@ package com.cinema.movie_booking.controller;
 
 import java.util.List;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import com.cinema.movie_booking.dto.api.ApiResponse;
 import com.cinema.movie_booking.dto.cinema.CinemaRequestDTO;
 import com.cinema.movie_booking.dto.cinema.CinemaResponseDTO;
 import com.cinema.movie_booking.service.CinemaService;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/admin/cinemas")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CinemaAdminController {
+
     private final CinemaService cinemaService;
 
     @GetMapping
-    public List<CinemaResponseDTO> getAll() {
-        return cinemaService.getAllCinemas();
+    public ResponseEntity<ApiResponse<List<CinemaResponseDTO>>> getAll() {
+        List<CinemaResponseDTO> cinemas = cinemaService.getAllCinemas();
+        return ResponseEntity.ok(ApiResponse.success(cinemas, "Lấy danh sách rạp thành công"));
     }
 
     @GetMapping("/{id}")
-    public CinemaResponseDTO getById(@PathVariable Long id) {
-        return cinemaService.getCinemaById(id);
+    public ResponseEntity<ApiResponse<CinemaResponseDTO>> getById(@PathVariable Long id) {
+        CinemaResponseDTO cinema = cinemaService.getCinemaById(id);
+        return ResponseEntity.ok(ApiResponse.success(cinema, "Lấy thông tin rạp thành công"));
     }
 
     @PostMapping
-    public CinemaResponseDTO create(@RequestBody CinemaRequestDTO cinema) {
-        return cinemaService.createCinema(cinema);
+    public ResponseEntity<ApiResponse<CinemaResponseDTO>> create(@RequestBody CinemaRequestDTO cinema) {
+        CinemaResponseDTO created = cinemaService.createCinema(cinema);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success(created, "Tạo rạp thành công"));
     }
 
     @PutMapping("/{id}")
-    public CinemaResponseDTO update(
+    public ResponseEntity<ApiResponse<CinemaResponseDTO>> update(
             @PathVariable Long id,
             @RequestBody CinemaRequestDTO cinema) {
-        return cinemaService.updateCinema(id, cinema);
+
+        CinemaResponseDTO updated = cinemaService.updateCinema(id, cinema);
+        return ResponseEntity.ok(ApiResponse.success(updated, "Cập nhật rạp thành công"));
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         cinemaService.deleteCinema(id);
+        return ResponseEntity.ok(ApiResponse.success(null, "Xóa rạp thành công"));
     }
 
     @GetMapping("/search")
-    public List<CinemaResponseDTO> searchByName(String keyword) {
-        return cinemaService.searchCinemasByName(keyword);
+    public ResponseEntity<ApiResponse<List<CinemaResponseDTO>>> searchByName(
+            @RequestParam String keyword) {
+
+        List<CinemaResponseDTO> cinemas = cinemaService.searchCinemasByName(keyword);
+        return ResponseEntity.ok(ApiResponse.success(cinemas, "Tìm kiếm rạp thành công"));
     }
 
     @GetMapping("/city")
-    public List<CinemaResponseDTO> getByCity(String city) {
-        return cinemaService.getCinemasByCity(city);
+    public ResponseEntity<ApiResponse<List<CinemaResponseDTO>>> getByCity(
+            @RequestParam String city) {
+
+        List<CinemaResponseDTO> cinemas = cinemaService.getCinemasByCity(city);
+        return ResponseEntity.ok(ApiResponse.success(cinemas, "Lấy danh sách rạp theo thành phố"));
+    }
+
+    @PatchMapping("/{id}/restore")
+    public ResponseEntity<ApiResponse<CinemaResponseDTO>> restore(@PathVariable Long id) {
+
+        CinemaResponseDTO cinema = cinemaService.restoreCinema(id);
+        return ResponseEntity.ok(ApiResponse.success(cinema, "Khôi phục rạp thành công"));
     }
 }
