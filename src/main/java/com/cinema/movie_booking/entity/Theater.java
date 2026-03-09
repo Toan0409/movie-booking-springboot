@@ -5,6 +5,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.cinema.movie_booking.enums.TheaterType;
+
 @Entity
 @Table(name = "theaters")
 @Getter
@@ -31,8 +33,9 @@ public class Theater {
     @Column(name = "seats_per_row")
     private Integer seatsPerRow;
 
-    @Column(name = "theater_type", length = 20)
-    private String theaterType; // STANDARD, VIP, IMAX, 4DX
+    @Enumerated(EnumType.STRING)
+    @Column(name = "theater_type")
+    private TheaterType theaterType; // STANDARD, VIP, IMAX, 4DX
 
     @Column(name = "is_active")
     private Boolean isActive = true;
