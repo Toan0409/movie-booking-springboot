@@ -8,10 +8,17 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final CorsConfigurationSource corsConfigurationSource;
+
+    public SecurityConfig(CorsConfigurationSource corsConfigurationSource) {
+        this.corsConfigurationSource = corsConfigurationSource;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -22,6 +29,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                // Tích hợp CORS vào Spring Security
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/**",
@@ -33,4 +42,5 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 }

@@ -25,9 +25,6 @@ public class Showtime {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
-    @Column(name = "show_date", nullable = false)
-    private LocalDateTime showDate;
-
     @Column(name = "price", nullable = false)
     private Double price;
 
