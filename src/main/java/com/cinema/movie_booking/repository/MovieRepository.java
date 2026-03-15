@@ -75,4 +75,6 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
 
     // Dem so phim chua bi xoa
     long countByIsDeletedFalse();
+
+    boolean existsByTitleAndIsDeletedFalse(String title);
 }

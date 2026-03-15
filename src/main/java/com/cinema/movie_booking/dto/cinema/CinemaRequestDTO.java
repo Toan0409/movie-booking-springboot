@@ -1,9 +1,11 @@
 package com.cinema.movie_booking.dto.cinema;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class CinemaRequestDTO {
+    @NotBlank(message = "Tên rạp không được để trống")
     private String name;
 
     private String address;

@@ -9,9 +9,6 @@ import lombok.*;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * DTO cho request tạo/cập nhật Movie
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

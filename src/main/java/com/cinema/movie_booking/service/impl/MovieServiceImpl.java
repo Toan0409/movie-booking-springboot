@@ -37,6 +37,10 @@ public class MovieServiceImpl implements MovieService {
     @Override
     @Transactional
     public MovieResponseDTO createMovie(MovieRequestDTO requestDTO) {
+        if (movieRepository.existsByTitleAndIsDeletedFalse(requestDTO.getTitle())) {
+            
+        }
+
         Movie movie = Movie.builder()
                 .title(requestDTO.getTitle())
                 .originalTitle(requestDTO.getOriginalTitle())
