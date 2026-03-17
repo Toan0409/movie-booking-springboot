@@ -62,4 +62,52 @@ public class PromoCode {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    public double calculateDiscount(double totalAmount) {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1. Kiểm tra trạng thái
+        if (!Boolean.TRUE.equals(isActive)) {
+            throw new IllegalArgumentException("Promo code is not active");
+        }
+
+        if (startDate != null && now.isBefore(startDate)) {
+            throw new IllegalArgumentException("Promo code not started yet");
+        }
+
+        if (endDate != null && now.isAfter(endDate)) {
+            throw new IllegalArgumentException("Promo code has expired");
+        }
+
+        if (maxUses != null && usedCount != null && usedCount >= maxUses) {
+            throw new IllegalArgumentException("Promo code usage limit reached");
+        }
+
+        // 2. Kiểm tra điều kiện đơn hàng tối thiểu
+        if (minOrderAmount != null && totalAmount < minOrderAmount) {
+            return 0;
+        }
+
+        double discount = 0;
+
+        // 3. Tính giảm giá
+        if ("PERCENTAGE".equalsIgnoreCase(discountType)) {
+
+            discount = totalAmount * discountValue / 100;
+
+            // Giới hạn giảm tối đa
+            if (maxDiscountAmount != null) {
+                discount = Math.min(discount, maxDiscountAmount);
+            }
+
+        } else if ("FIXED_AMOUNT".equalsIgnoreCase(discountType)) {
+
+            discount = discountValue;
+
+        }
+
+        // 4. Không cho giảm quá tổng tiền
+        return Math.min(discount, totalAmount);
+    }
 }

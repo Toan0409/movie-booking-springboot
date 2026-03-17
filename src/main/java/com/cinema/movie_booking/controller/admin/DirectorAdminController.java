@@ -1,4 +1,4 @@
-package com.cinema.movie_booking.controller;
+package com.cinema.movie_booking.controller.admin;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,9 +22,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
-@RequestMapping("/api/directors")
+@RequestMapping("/api/admin/directors")
 @AllArgsConstructor
-public class DirectorController {
+public class DirectorAdminController {
     private final DirectorService directorService;
 
     @PostMapping

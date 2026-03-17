@@ -1,4 +1,4 @@
-package com.cinema.movie_booking.controller;
+package com.cinema.movie_booking.controller.admin;
 
 import java.util.List;
 

@@ -1,9 +1,14 @@
 package com.cinema.movie_booking.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.cinema.movie_booking.entity.Seat;
+
+import jakarta.persistence.LockModeType;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,4 +51,10 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
      */
     boolean existsByTheater_TheaterIdAndSeatId(Long theaterId, Long seatId);
 
+    /**
+     * Lock seats for update
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM Seat s WHERE s.seatId IN :seatIds")
+    List<Seat> findAllByIdForUpdate(@Param("seatIds") List<Long> seatIds);
 }

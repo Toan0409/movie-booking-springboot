@@ -1,4 +1,4 @@
-package com.cinema.movie_booking.controller;
+package com.cinema.movie_booking.controller.admin;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,9 +23,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
-@RequestMapping("/api/genres")
+@RequestMapping("/api/admin/genres")
 @RequiredArgsConstructor
-public class GenreController {
+public class GenreAdminController {
     private final GenreService genreService;
 
     @PostMapping

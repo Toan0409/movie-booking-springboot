@@ -1,4 +1,4 @@
-package com.cinema.movie_booking.controller;
+package com.cinema.movie_booking.controller.admin;
 
 import com.cinema.movie_booking.dto.api.ApiResponse;
 import com.cinema.movie_booking.dto.movie.MoviePageDTO;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/movies")
 @RequiredArgsConstructor
-public class MovieController {
+public class MovieAdminController {
 
     private final MovieService movieService;
 

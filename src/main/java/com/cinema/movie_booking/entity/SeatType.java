@@ -20,7 +20,7 @@ public class SeatType {
     private Long seatTypeId;
 
     @Column(name = "name", unique = true, nullable = false, length = 20)
-    private String name; 
+    private String name;
 
     @Column(name = "description", length = 255)
     private String description;
