@@ -2,6 +2,9 @@ package com.cinema.movie_booking.dto.director;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -11,7 +14,10 @@ public class DirectorRequestDTO {
     private String name;
 
     private String biography;
-    private LocalDate dateOfBirth;
+
+    @JsonAlias({ "birthDate", "dateOfBirth", "birth_date" })
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate birthDate;
 
     private String nationality;
 

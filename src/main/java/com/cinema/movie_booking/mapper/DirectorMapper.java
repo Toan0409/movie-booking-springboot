@@ -9,7 +9,9 @@ public class DirectorMapper {
         return Director.builder()
                 .name(requestDTO.getName().trim())
                 .biography(requestDTO.getBiography())
-                .birthDate(requestDTO.getDateOfBirth())
+                .birthDate(requestDTO.getBirthDate())
+                .imageUrl(requestDTO.getImageUrl())
+                .nationality(requestDTO.getNationality())
                 .build();
     }
 
@@ -20,6 +22,7 @@ public class DirectorMapper {
                 .biography(director.getBiography())
                 .birthDate(director.getBirthDate())
                 .nationality(director.getNationality())
+                .imageUrl(director.getImageUrl())
                 .createdAt(director.getCreatedAt())
                 .build();
     }

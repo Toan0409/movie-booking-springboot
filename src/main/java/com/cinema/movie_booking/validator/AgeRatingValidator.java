@@ -12,7 +12,16 @@ import java.util.Set;
 public class AgeRatingValidator implements ConstraintValidator<ValidAgeRating, String> {
 
     private static final Set<String> VALID_RATINGS = new HashSet<>(
-            Arrays.asList("G", "PG", "PG-13", "R", "NC-17"));
+            Arrays.asList(
+                    // Chuẩn phân loại phim Việt Nam (Thông tư 05/2023/TT-BVHTTDL)
+                    "P",    // Phổ biến rộng rãi
+                    "K",    // Dưới 13 tuổi cần có người giám hộ
+                    "T13",  // Từ 13 tuổi trở lên
+                    "T16",  // Từ 16 tuổi trở lên
+                    "T18",  // Từ 18 tuổi trở lên
+                    "C",    // Cấm phổ biến
+                    // Chuẩn phân loại phim Mỹ (MPAA) - giữ lại để tương thích
+                    "G", "PG", "PG-13", "R", "NC-17"));
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {

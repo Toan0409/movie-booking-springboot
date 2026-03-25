@@ -60,7 +60,10 @@ public class DirectorServiceImpl implements DirectorService {
 
         director.setName(newName);
         director.setBiography(requestDTO.getBiography());
-        director.setBirthDate(requestDTO.getDateOfBirth());
+        if (requestDTO.getBirthDate() != null) {
+            director.setBirthDate(requestDTO.getBirthDate());
+        }
+        director.setImageUrl(requestDTO.getImageUrl());
         director.setNationality(requestDTO.getNationality());
         return DirectorMapper.toDTO(directorRepository.save(director));
     }
