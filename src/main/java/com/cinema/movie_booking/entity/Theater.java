@@ -37,6 +37,7 @@ public class Theater {
     @Column(name = "theater_type")
     private TheaterType theaterType; // STANDARD, VIP, IMAX, 4DX
 
+    @Builder.Default
     @Column(name = "is_active")
     private Boolean isActive = true;
 
