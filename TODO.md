@@ -1,9 +1,13 @@
-# TODO - Fix Movie Management Bugs
+# Fix: POST /api/admin/users trả về 403 Forbidden (content-length: 0)
 
-## Danh sách lỗi cần sửa
+## Nguyên nhân
+- Request thiếu JWT Bearer Token → Spring Security chặn với 403
+- SecurityConfig không restrict `/api/admin/**` chỉ cho ADMIN role
+- UserAdminController thiếu `@PreAuthorize("hasRole('ADMIN')")`
 
-- [x] Fix 1: `axiosClient.js` — đổi port `8000` → `8080` (đã đúng)
-- [x] Fix 2: `movieApi.js` — sửa URL `/admin/movies` → `/movies`
-- [x] Fix 3: `MoviesPage.jsx` — `handleSubmit`: chuyển `status` string → boolean flags (`isNowShowing`, `isComingSoon`, `isFeatured`)
-- [x] Fix 4: `MoviesPage.jsx` — `openModal` (edit) + table display: đọc `isNowShowing/isComingSoon` thay vì `movie.status`
-- [x] Fix 5: `AgeRatingValidator.java` + `ValidAgeRating.java` — thêm chuẩn phân loại Việt Nam (P, K, T13, T16, T18, C)
+## Các bước sửa
+
+- [x] Phân tích lỗi
+- [x] Sửa `SecurityConfig.java` — Thêm rule `hasRole("ADMIN")` cho `/api/admin/**`
+- [x] Sửa `UserAdminController.java` — Thêm `@PreAuthorize("hasRole('ADMIN')")` ở class level
+- [ ] Kiểm tra lại luồng: Login → lấy token → gọi API với Bearer token

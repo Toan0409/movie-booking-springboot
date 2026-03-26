@@ -12,10 +12,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/movies")
+@RequestMapping("/api/admin/movies")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class MovieAdminController {
 
@@ -32,24 +34,7 @@ public class MovieAdminController {
                 .body(ApiResponse.success(movie, "Tạo phim thành công"));
     }
 
-    /**
-     * Lấy danh sách tất cả Movies (có phân trang)
-     */
-    @GetMapping
-    public ResponseEntity<ApiResponse<Page<MovieResponseDTO>>> getAllMovies(
-            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
-        Page<MovieResponseDTO> movies = movieService.getAllMovies(pageable);
-        return ResponseEntity.ok(ApiResponse.success(movies, "Lấy danh sách phim thành công"));
-    }
-
-    /**
-     * Lấy Movie theo id
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<MovieResponseDTO>> getMovieById(@PathVariable Long id) {
-        MovieResponseDTO movie = movieService.getMovieById(id);
-        return ResponseEntity.ok(ApiResponse.success(movie, "Lấy thông tin phim thành công"));
-    }
+    
 
     /**
      * Cập nhật Movie
@@ -80,55 +65,5 @@ public class MovieAdminController {
         return ResponseEntity.ok(ApiResponse.success(movie, "Khôi phục phim thành công"));
     }
 
-    /**
-     * Lấy danh sách phim đang chiếu (có phân trang)
-     */
-    @GetMapping("/now-showing")
-    public ResponseEntity<ApiResponse<Page<MovieResponseDTO>>> getMoviesNowShowing(
-            @PageableDefault(size = 10, sort = "releaseDate") Pageable pageable) {
-        Page<MovieResponseDTO> movies = movieService.getMoviesNowShowing(pageable);
-        return ResponseEntity.ok(ApiResponse.success(movies, "Lấy danh sách phim đang chiếu thành công"));
-    }
-
-    /**
-     * Lấy danh sách phim sắp chiếu (có phân trang)
-     */
-    @GetMapping("/coming-soon")
-    public ResponseEntity<ApiResponse<Page<MovieResponseDTO>>> getMoviesComingSoon(
-            @PageableDefault(size = 10, sort = "releaseDate") Pageable pageable) {
-        Page<MovieResponseDTO> movies = movieService.getMoviesComingSoon(pageable);
-        return ResponseEntity.ok(ApiResponse.success(movies, "Lấy danh sách phim sắp chiếu thành công"));
-    }
-
-    /**
-     * Lấy danh sách phim nổi bật (có phân trang)
-     */
-    @GetMapping("/featured")
-    public ResponseEntity<ApiResponse<Page<MovieResponseDTO>>> getFeaturedMovies(
-            @PageableDefault(size = 10, sort = "rating") Pageable pageable) {
-        Page<MovieResponseDTO> movies = movieService.getFeaturedMovies(pageable);
-        return ResponseEntity.ok(ApiResponse.success(movies, "Lấy danh sách phim nổi bật thành công"));
-    }
-
-    /**
-     * Tìm kiếm phim theo tên (có phân trang)
-     */
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Page<MovieResponseDTO>>> searchMovies(
-            @RequestParam String keyword,
-            @PageableDefault(size = 10, sort = "title") Pageable pageable) {
-        Page<MovieResponseDTO> movies = movieService.searchMovies(keyword, pageable);
-        return ResponseEntity.ok(ApiResponse.success(movies, "Tìm kiếm phim thành công"));
-    }
-
-    /**
-     * Lấy danh sách phim theo thể loại (có phân trang)
-     */
-    @GetMapping("/genre/{genreId}")
-    public ResponseEntity<ApiResponse<Page<MovieResponseDTO>>> getMoviesByGenre(
-            @PathVariable Long genreId,
-            @PageableDefault(size = 10, sort = "title") Pageable pageable) {
-        Page<MovieResponseDTO> movies = movieService.getMoviesByGenre(genreId, pageable);
-        return ResponseEntity.ok(ApiResponse.success(movies, "Lấy danh sách phim theo thể loại thành công"));
-    }
+    
 }

@@ -3,6 +3,7 @@ package com.cinema.movie_booking.controller.admin;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/admin/genres")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class GenreAdminController {
     private final GenreService genreService;
@@ -34,18 +36,7 @@ public class GenreAdminController {
         return ResponseEntity.ok(ApiResponse.success(genreResponseDTO, "Tạo thể loại thành công"));
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<Page<GenreResponseDTO>>> getAll(
-            @RequestParam(required = false) String keyword, Pageable pageable) {
-        Page<GenreResponseDTO> genres = genreService.getAllGenres(keyword, pageable);
-        return ResponseEntity.ok(ApiResponse.success(genres, "Lấy danh sách thể loại thành công"));
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<GenreResponseDTO>> getByID(@PathVariable Long id) {
-        GenreResponseDTO genreResponseDTO = genreService.getGenreById(id);
-        return ResponseEntity.ok(ApiResponse.success(genreResponseDTO, "Lấy thông tin thể loại thành công"));
-    }
+    
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<GenreResponseDTO>> update(@PathVariable Long id,
