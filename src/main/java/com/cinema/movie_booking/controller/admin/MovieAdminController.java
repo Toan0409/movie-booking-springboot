@@ -34,7 +34,12 @@ public class MovieAdminController {
                 .body(ApiResponse.success(movie, "Tạo phim thành công"));
     }
 
-    
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<MovieResponseDTO>>> getAllMovies(
+            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
+        Page<MovieResponseDTO> movies = movieService.getAllMovies(pageable);
+        return ResponseEntity.ok(ApiResponse.success(movies, "Lấy danh sách phim thành công"));
+    }
 
     /**
      * Cập nhật Movie
@@ -65,5 +70,4 @@ public class MovieAdminController {
         return ResponseEntity.ok(ApiResponse.success(movie, "Khôi phục phim thành công"));
     }
 
-    
 }

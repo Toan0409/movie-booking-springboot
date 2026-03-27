@@ -85,7 +85,10 @@ public class SecurityConfig {
                 // Cấu hình phân quyền
                 .authorizeHttpRequests(auth -> auth
                         // Cho phép tất cả request đến /api/auth/** (register, login)
-                        .requestMatchers("/", "/api/movies/**", "/api/cinemas/**", "/api/genres", "/api/auth/**")
+                        .requestMatchers("/", "/api/client/showtimes/**", "/api/seats/**", "/api/movies/**",
+                                "/api/cinemas/**",
+                                "/api/genres",
+                                "/api/auth/**")
                         .permitAll()
 
                         // Cho phép Swagger UI

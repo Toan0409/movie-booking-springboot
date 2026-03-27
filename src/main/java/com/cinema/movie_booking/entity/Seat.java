@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "seats", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "theater_id", "seat_row", "seat_number" })
+        @UniqueConstraint(name = "UK_seat_theater_row_number", columnNames = { "theater_id", "seat_row",
+                "seat_number" }),
+        @UniqueConstraint(name = "UK_seat_theater_code", columnNames = { "theater_id", "seat_code" })
 })
 @Getter
 @Setter
@@ -26,7 +28,7 @@ public class Seat {
     @Column(name = "seat_number", nullable = false)
     private Integer seatNumber; // 1, 2, 3, ...
 
-    @Column(name = "seat_code", unique = true, length = 10)
+    @Column(name = "seat_code", nullable = false, length = 10)
     private String seatCode; // A1, A2, B1, ...
 
     @Column(name = "is_available")

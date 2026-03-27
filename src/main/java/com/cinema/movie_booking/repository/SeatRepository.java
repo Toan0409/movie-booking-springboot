@@ -37,6 +37,11 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
     boolean existsByTheater_TheaterIdAndSeatCode(Long theaterId, String seatCode);
 
     /**
+     * Check if a theater already has any seats generated (idempotency guard)
+     */
+    boolean existsByTheater_TheaterId(Long theaterId);
+
+    /**
      * Find all seats by seat type
      */
     List<Seat> findBySeatType_SeatTypeId(Long seatTypeId);
