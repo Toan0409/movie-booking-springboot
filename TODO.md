@@ -1,21 +1,12 @@
-# TODO - Fix duplicate seat_code when generating seats
+# Fix: Movie Seeding Issues
 
-- [x] Update Seat entity unique constraints:
-  - [x] Remove global unique on `seat_code`
-  - [x] Add composite unique (`theater_id`, `seat_code`) named `UK_seat_theater_code`
-  - [x] Keep composite unique (`theater_id`, `seat_row`, `seat_number`) named `UK_seat_theater_row_number`
+## Root Causes
+1. `@Transactional` self-invocation in `DataSeeder` → Director/Actor entities become detached → Hibernate throws "detached entity passed to persist"
+2. `Genre.isDeleted` missing `@Builder.Default` → potential NOT NULL violation
 
-- [x] Update SeatRepository for generation safety checks:
-  - [x] Add `existsByTheater_TheaterId(Long theaterId)` to detect pre-existing seats in a theater
+## Tasks
 
-- [x] Refactor TheaterServiceImpl.generateSeats():
-  - [x] Ensure method runs inside transaction flow of create() (via @Transactional + flush before generate)
-  - [x] Add guard for invalid row/seat values
-  - [x] Add idempotency guard: if theater already has seats then skip generation
-  - [x] Generate seats deterministically and in-memory deduplicate by seatCode (HashSet<String>)
-  - [x] Defensive DB duplicate check per seat via existsByTheater_TheaterIdAndSeatCode
-  - [x] Save with `saveAll` only once after validation
-
-- [x] Verify create() flow does not invoke generation more than once
-
-- [x] Summarize root cause and DB design correction
+- [x] Analyze root causes
+- [x] Create `MovieSeederService.java` with proper `@Transactional` methods
+- [x] Update `DataSeeder.java` to inject and call `MovieSeederService`
+- [x] Fix `Genre.java` - add `@Builder.Default` for `isDeleted`

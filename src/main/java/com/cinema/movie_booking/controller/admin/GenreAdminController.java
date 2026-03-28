@@ -36,7 +36,12 @@ public class GenreAdminController {
         return ResponseEntity.ok(ApiResponse.success(genreResponseDTO, "Tạo thể loại thành công"));
     }
 
-    
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<GenreResponseDTO>>> getAll(
+            @RequestParam(required = false) String keyword, Pageable pageable) {
+        Page<GenreResponseDTO> genres = genreService.getAllGenres(keyword, pageable);
+        return ResponseEntity.ok(ApiResponse.success(genres, "Lấy danh sách thể loại thành công"));
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<GenreResponseDTO>> update(@PathVariable Long id,

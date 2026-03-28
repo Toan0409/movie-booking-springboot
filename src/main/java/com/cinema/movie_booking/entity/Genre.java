@@ -28,6 +28,7 @@ public class Genre {
     @OneToMany(mappedBy = "genre", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Movie> movies;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean isDeleted = false;
 

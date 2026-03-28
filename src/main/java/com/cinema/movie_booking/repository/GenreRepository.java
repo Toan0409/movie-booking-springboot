@@ -20,4 +20,7 @@ public interface GenreRepository extends JpaRepository<Genre, Long> {
     Page<Genre> findByNameContainingIgnoreCaseAndIsDeletedFalse(String keyword, Pageable pageable);
 
     Optional<Genre> findByGenreIdAndIsDeletedTrue(Long id);
+
+    // Used by DataSeeder to find genre by name (case-insensitive)
+    Optional<Genre> findByNameIgnoreCase(String name);
 }
