@@ -16,6 +16,7 @@ public class TheaterMapper {
                 .theaterType(theater.getTheaterType())
                 .isActive(theater.getIsActive())
                 .cinemaId(theater.getCinema().getCinemaId())
+                .cinemaName(theater.getCinema().getName())
                 .build();
     }
 

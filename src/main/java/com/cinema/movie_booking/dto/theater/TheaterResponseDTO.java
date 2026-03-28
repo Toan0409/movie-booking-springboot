@@ -21,4 +21,5 @@ public class TheaterResponseDTO {
     private Boolean isActive;
 
     private Long cinemaId;
+    private String cinemaName;
 }
