@@ -38,7 +38,7 @@ public class MovieServiceImpl implements MovieService {
     @Transactional
     public MovieResponseDTO createMovie(MovieRequestDTO requestDTO) {
         if (movieRepository.existsByTitleAndIsDeletedFalse(requestDTO.getTitle())) {
-            
+            throw new IllegalArgumentException("Movie with title '" + requestDTO.getTitle() + "' already exists");
         }
 
         Movie movie = Movie.builder()
