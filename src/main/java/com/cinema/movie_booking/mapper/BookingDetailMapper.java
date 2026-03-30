@@ -8,7 +8,7 @@ public class BookingDetailMapper {
         return BookingDetailResponseDTO.builder()
                 .bookingDetailId(detail.getBookingDetailId())
                 .seatId(detail.getSeat().getSeatId())
-                .seatNumber(detail.getSeat().getSeatNumber())
+                .seatLabel(detail.getSeat().getSeatCode())
                 .unitPrice(detail.getUnitPrice())
                 .quantity(detail.getQuantity())
                 .subtotal(detail.getSubtotal())

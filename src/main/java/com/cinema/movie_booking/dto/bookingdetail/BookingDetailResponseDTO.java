@@ -10,7 +10,7 @@ public class BookingDetailResponseDTO {
 
     private Long seatId;
 
-    private Integer seatNumber;
+    private String seatLabel;
 
     private Double unitPrice;
 

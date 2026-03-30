@@ -90,11 +90,9 @@ public class BookingStatusServiceImpl implements BookingStatusService {
         booking.setStatus(newStatus.name());
         bookingRepository.save(booking);
 
-
         return BookingMapper.toBookingResponseDTO(booking);
     }
 
-   
     /**
      * Scheduled task: tu dong huy cac booking PENDING da het han.
      * Chay moi 1 phut de kiem tra.
@@ -167,6 +165,7 @@ public class BookingStatusServiceImpl implements BookingStatusService {
 
             paymentRepository.save(payment);
             log.debug("[BookingStatus] Da luu Payment cho booking #{}", booking.getBookingId());
+            occupySeats(booking);
         } else {
             log.warn("[BookingStatus] Payment da ton tai cho booking #{}, bo qua tao moi",
                     booking.getBookingId());
@@ -218,6 +217,24 @@ public class BookingStatusServiceImpl implements BookingStatusService {
         seatRepository.saveAll(seatsToRelease);
         log.info("[BookingStatus] Da giai phong {} ghe cho booking #{}",
                 seatsToRelease.size(), booking.getBookingId());
+    }
+
+    // Khi chuyển sang trạng thái PAID thì cần lock ghế
+    private void occupySeats(Booking booking) {
+        List<BookingDetail> details = bookingDetailRepository.findByBooking_BookingId(booking.getBookingId());
+
+        List<Seat> seats = details.stream()
+                .map(BookingDetail::getSeat)
+                .toList();
+
+        seats.forEach(seat -> {
+            seat.setIsAvailable(false);
+        });
+
+        seatRepository.saveAll(seats);
+
+        log.info("[BookingStatus] Da danh dau {} ghe la OCCUPIED cho booking #{}",
+                seats.size(), booking.getBookingId());
     }
 
     /**
