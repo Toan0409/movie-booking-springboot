@@ -48,4 +48,7 @@ public class BookingResponseDTO {
 
     // ===== Danh sách ghế =====
     private List<BookingDetailResponseDTO> bookingDetails;
+
+    private Long theaterId;
+    private String theaterName;
 }

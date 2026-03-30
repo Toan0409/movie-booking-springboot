@@ -32,7 +32,7 @@ public class Booking {
     private Double finalAmount;
 
     @Column(name = "status", nullable = false, length = 20)
-    private String status; // PENDING, CONFIRMED, CANCELLED, COMPLETED, EXPIRED
+    private String status; 
 
     @Column(name = "booking_date", nullable = false)
     private LocalDateTime bookingDate;

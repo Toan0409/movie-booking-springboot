@@ -1,12 +1,18 @@
-# Fix: Movie Seeding Issues
+# Booking Status Update Feature - TODO
 
-## Root Causes
-1. `@Transactional` self-invocation in `DataSeeder` → Director/Actor entities become detached → Hibernate throws "detached entity passed to persist"
-2. `Genre.isDeleted` missing `@Builder.Default` → potential NOT NULL violation
+## Steps
 
-## Tasks
-
-- [x] Analyze root causes
-- [x] Create `MovieSeederService.java` with proper `@Transactional` methods
-- [x] Update `DataSeeder.java` to inject and call `MovieSeederService`
-- [x] Fix `Genre.java` - add `@Builder.Default` for `isDeleted`
+- [x] Read and understand existing codebase
+- [ ] Create `enums/BookingStatus.java`
+- [ ] Create `entity/BookingStatusHistory.java`
+- [ ] Create `repository/PaymentRepository.java`
+- [ ] Create `repository/TicketRepository.java`
+- [ ] Create `repository/BookingStatusHistoryRepository.java`
+- [ ] Create `dto/booking/UpdateBookingStatusRequestDTO.java`
+- [ ] Create `exception/InvalidStatusTransitionException.java`
+- [ ] Create `service/BookingStatusService.java`
+- [ ] Create `service/impl/BookingStatusServiceImpl.java`
+- [ ] Edit `controller/admin/BookingAdminController.java` — add PATCH endpoint
+- [ ] Edit `exception/GlobalExceptionHandler.java` — add handler for InvalidStatusTransitionException
+- [ ] Edit `repository/BookingDetailRepository.java` — fix status IN query (CONFIRMED → PAID)
+- [ ] Verify build compiles
