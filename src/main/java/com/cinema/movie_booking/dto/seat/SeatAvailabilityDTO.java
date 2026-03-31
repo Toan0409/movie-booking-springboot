@@ -49,7 +49,7 @@ public class SeatAvailabilityDTO {
      * Seat availability status:
      * - AVAILABLE: Seat is not booked for this showtime
      * - RESERVED: Seat is reserved (PENDING booking)
-     * - OCCUPIED: Seat is booked (CONFIRMED booking)
+     * - OCCUPIED: Seat is booked (PAID booking)
      */
     private String status;
 

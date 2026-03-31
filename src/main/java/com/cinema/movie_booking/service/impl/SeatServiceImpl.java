@@ -78,10 +78,8 @@ public class SeatServiceImpl implements SeatService {
         for (BookingDetail detail : bookedDetails) {
             Long seatId = detail.getSeat().getSeatId();
             String bookingStatus = detail.getBooking().getStatus();
-
-            // Determine seat status based on booking status
             String status;
-            if ("CONFIRMED".equals(bookingStatus)) {
+            if ("PAID".equals(bookingStatus)) {
                 status = SEAT_STATUS_OCCUPIED;
             } else if ("PENDING".equals(bookingStatus)) {
                 status = SEAT_STATUS_RESERVED;
@@ -193,15 +191,15 @@ public class SeatServiceImpl implements SeatService {
     /**
      * Generate seats for a theater based on row count and seats per row
      * 
-     * @param theater the theater entity
-     * @param rowsCount number of rows
+     * @param theater     the theater entity
+     * @param rowsCount   number of rows
      * @param seatsPerRow number of seats per row
      */
     private void generateSeats(Theater theater, Integer rowsCount, Integer seatsPerRow) {
         if (rowsCount == null || seatsPerRow == null || rowsCount <= 0 || seatsPerRow <= 0) {
             return;
         }
-        
+
         // Get or create default seat types
         SeatType standardType = seatTypeRepository.findByName("STANDARD")
                 .orElseGet(() -> seatTypeRepository.save(
@@ -209,28 +207,26 @@ public class SeatServiceImpl implements SeatService {
                                 .name("STANDARD")
                                 .description("Standard seat")
                                 .priceMultiplier(1.0)
-                                .build()
-                ));
-        
+                                .build()));
+
         SeatType vipType = seatTypeRepository.findByName("VIP")
                 .orElseGet(() -> seatTypeRepository.save(
                         SeatType.builder()
                                 .name("VIP")
                                 .description("VIP seat")
                                 .priceMultiplier(1.5)
-                                .build()
-                ));
-        
+                                .build()));
+
         List<Seat> seats = new ArrayList<>();
-        
+
         for (int row = 0; row < rowsCount; row++) {
             char rowChar = (char) ('A' + row);
-            
+
             for (int seatNum = 1; seatNum <= seatsPerRow; seatNum++) {
                 // Determine seat type based on row
                 // Last row is VIP, others are STANDARD
                 SeatType seatType = (row == rowsCount - 1) ? vipType : standardType;
-                
+
                 Seat seat = Seat.builder()
                         .seatRow(String.valueOf(rowChar))
                         .seatNumber(seatNum)
@@ -243,7 +239,7 @@ public class SeatServiceImpl implements SeatService {
                 seats.add(seat);
             }
         }
-        
+
         seatRepository.saveAll(seats);
     }
 

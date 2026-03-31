@@ -96,16 +96,17 @@ public class BookingStatusServiceImpl implements BookingStatusService {
     /**
      * Scheduled task: tu dong huy cac booking PENDING da het han.
      * Chay moi 1 phut de kiem tra.
+     *
+     * FIX BUG-6:
+     * - Dung query DB truc tiep thay vi load ALL PENDING vao memory
+     * - Re-check status truoc khi cancel de tranh race condition
+     * - Xu ly tung booking doc lap (khong dung @Transactional chung)
      */
     @Override
     @Scheduled(fixedDelay = 60_000)
-    @Transactional
     public void autoExpireBookings() {
-        List<Booking> expiredBookings = bookingRepository.findByStatus(BookingStatus.PENDING.name())
-                .stream()
-                .filter(b -> b.getExpiryDate() != null
-                        && LocalDateTime.now().isAfter(b.getExpiryDate()))
-                .toList();
+        // FIX BUG-6a: Query truc tiep DB voi dieu kien expiry_date < NOW()
+        List<Booking> expiredBookings = bookingRepository.findExpiredPendingBookings(LocalDateTime.now());
 
         if (expiredBookings.isEmpty()) {
             return;
@@ -116,17 +117,39 @@ public class BookingStatusServiceImpl implements BookingStatusService {
 
         for (Booking booking : expiredBookings) {
             try {
-                String oldStatus = booking.getStatus();
-                releaseSeats(booking);
-                booking.setStatus(BookingStatus.CANCELLED.name());
-                bookingRepository.save(booking);
-                log.info("[AutoExpire] Da huy booking #{} (het han luc {})",
-                        booking.getBookingId(), booking.getExpiryDate());
+                expireSingleBooking(booking);
             } catch (Exception e) {
                 log.error("[AutoExpire] Loi khi huy booking #{}: {}",
                         booking.getBookingId(), e.getMessage(), e);
             }
         }
+    }
+
+    /**
+     * FIX BUG-6b: Xu ly expire tung booking trong transaction rieng biet.
+     * Neu 1 booking loi, cac booking khac van duoc xu ly binh thuong.
+     */
+    @Transactional
+    public void expireSingleBooking(Booking booking) {
+        Booking freshBooking = bookingRepository.findById(booking.getBookingId())
+                .orElse(null);
+
+        if (freshBooking == null) {
+            log.warn("[AutoExpire] Booking #{} khong con ton tai, bo qua", booking.getBookingId());
+            return;
+        }
+
+        // FIX BUG-6c: Chi cancel neu van con PENDING (tranh cancel booking da PAID)
+        if (!BookingStatus.PENDING.name().equals(freshBooking.getStatus())) {
+            log.warn("[AutoExpire] Booking #{} da doi trang thai thanh {}, bo qua",
+                    freshBooking.getBookingId(), freshBooking.getStatus());
+            return;
+        }
+
+        freshBooking.setStatus(BookingStatus.CANCELLED.name());
+        bookingRepository.save(freshBooking);
+        log.info("[AutoExpire] Da huy booking #{} (het han luc {})",
+                freshBooking.getBookingId(), freshBooking.getExpiryDate());
     }
 
     // =========================================================================
@@ -137,6 +160,11 @@ public class BookingStatusServiceImpl implements BookingStatusService {
      * Xu ly khi chuyen sang PAID:
      * - Tao Ticket cho moi BookingDetail (neu chua co)
      * - Luu Payment record
+     *
+     * FIX BUG-5: Da xoa occupySeats() call.
+     * - occupySeats() set isAvailable=false global → sai thiet ke
+     * - Seat status PAID duoc xac dinh qua BookingDetail query, khong qua
+     * isAvailable
      */
     private void handlePaidTransition(Booking booking, UpdateBookingStatusRequestDTO request) {
         log.debug("[BookingStatus] Xu ly PAID cho booking #{}", booking.getBookingId());
@@ -165,7 +193,8 @@ public class BookingStatusServiceImpl implements BookingStatusService {
 
             paymentRepository.save(payment);
             log.debug("[BookingStatus] Da luu Payment cho booking #{}", booking.getBookingId());
-            occupySeats(booking);
+            // FIX BUG-5: KHONG goi occupySeats() - seat status PAID duoc xac dinh qua
+            // BookingDetail
         } else {
             log.warn("[BookingStatus] Payment da ton tai cho booking #{}, bo qua tao moi",
                     booking.getBookingId());
@@ -193,49 +222,47 @@ public class BookingStatusServiceImpl implements BookingStatusService {
     }
 
     /**
-     * Giai phong ghe: set isAvailable = true cho tat ca ghe trong booking.
+     * FIX BUG-3 + BUG-4: Khong thay doi seat.isAvailable khi release.
+     *
+     * Ly do:
+     * - isAvailable chi dung cho admin-disabled seats (permanent flag)
+     * - Seat availability theo showtime duoc xac dinh qua BookingDetail query
+     * - Neu set isAvailable=true, se vo tinh re-enable ghe bi admin disable
+     * - PENDING booking khong thay doi isAvailable, nen release la no-op
+     *
+     * Chi ghi log de tracking, khong thay doi DB.
      */
     private void releaseSeats(Booking booking) {
         List<BookingDetail> details = bookingDetailRepository.findByBooking_BookingId(booking.getBookingId());
 
         if (details.isEmpty()) {
-            log.warn("[BookingStatus] Booking #{} khong co booking detail nao de giai phong ghe",
+            log.warn("[BookingStatus] Booking #{} khong co booking detail nao",
                     booking.getBookingId());
             return;
         }
 
-        List<Seat> seatsToRelease = details.stream()
-                .map(BookingDetail::getSeat)
-                .toList();
-
-        seatsToRelease.forEach(seat -> {
-            seat.setIsAvailable(true);
-            log.debug("[BookingStatus] Giai phong ghe {} (ID: {})",
-                    seat.getSeatCode(), seat.getSeatId());
-        });
-
-        seatRepository.saveAll(seatsToRelease);
-        log.info("[BookingStatus] Da giai phong {} ghe cho booking #{}",
-                seatsToRelease.size(), booking.getBookingId());
+        // FIX BUG-3/4: KHONG set isAvailable=true
+        // Seat availability duoc xac dinh boi BookingDetail.status (PAID/PENDING)
+        // isAvailable chi dung cho admin-disabled seats
+        log.info("[BookingStatus] Booking #{} da huy - {} ghe duoc giai phong (qua BookingDetail query)",
+                booking.getBookingId(), details.size());
     }
 
-    // Khi chuyển sang trạng thái PAID thì cần lock ghế
-    private void occupySeats(Booking booking) {
-        List<BookingDetail> details = bookingDetailRepository.findByBooking_BookingId(booking.getBookingId());
-
-        List<Seat> seats = details.stream()
-                .map(BookingDetail::getSeat)
-                .toList();
-
-        seats.forEach(seat -> {
-            seat.setIsAvailable(false);
-        });
-
-        seatRepository.saveAll(seats);
-
-        log.info("[BookingStatus] Da danh dau {} ghe la OCCUPIED cho booking #{}",
-                seats.size(), booking.getBookingId());
-    }
+    /**
+     * FIX BUG-3: Da xoa occupySeats() vi no set isAvailable=false global.
+     *
+     * Van de cu:
+     * - occupySeats() set seat.isAvailable=false cho tat ca ghe trong booking PAID
+     * - isAvailable la global flag → ghe bi block cho TAT CA suất chiếu khac
+     * - Vi du: Ghe A1 dat cho suat 10h → isAvailable=false → khong the dat cho suat
+     * 14h
+     *
+     * Giai phap: Seat availability theo showtime duoc xac dinh qua:
+     * BookingDetailRepository.existsByShowtimeIdAndSeatId() → check PAID/PENDING
+     * SeatServiceImpl.getSeatAvailability() → dung BookingDetail, khong dung
+     * isAvailable
+     */
+    // occupySeats() DA BI XOA - FIX BUG-3
 
     /**
      * Tao Ticket cho moi BookingDetail chua co ticket.
@@ -281,7 +308,12 @@ public class BookingStatusServiceImpl implements BookingStatusService {
 
     /**
      * Kiem tra neu booking PENDING da het han thi tu dong chuyen sang CANCELLED.
-     * Nem BadRequestException de thong bao cho caller biet booking da bi huy.
+     *
+     * FIX BUG-8: Throw BookingExpiredException sau khi auto-expire de caller biet
+     * ro rang.
+     * Truoc day: khong throw → caller tiep tuc →
+     * InvalidStatusTransitionException(CANCELLED→X)
+     * → error message gay nham lan cho client.
      */
     private void checkAndAutoExpire(Booking booking, String changedBy) {
         if (BookingStatus.PENDING.name().equals(booking.getStatus())
@@ -291,10 +323,14 @@ public class BookingStatusServiceImpl implements BookingStatusService {
             log.info("[BookingStatus] Booking #{} da het han (expiryDate: {}), tu dong huy",
                     booking.getBookingId(), booking.getExpiryDate());
 
-            String oldStatus = booking.getStatus();
-            releaseSeats(booking);
             booking.setStatus(BookingStatus.CANCELLED.name());
             bookingRepository.save(booking);
+
+            // FIX BUG-8: Throw exception ro rang thay vi de caller nhan
+            // InvalidStatusTransitionException
+            throw new com.cinema.movie_booking.exception.BadRequestException(
+                    "Booking #" + booking.getBookingId() + " da het han luc "
+                            + booking.getExpiryDate() + " va da bi tu dong huy.");
         }
     }
 
