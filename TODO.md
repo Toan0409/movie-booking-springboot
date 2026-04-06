@@ -1,34 +1,34 @@
-# Booking Seat Logic — Bug Fix TODO
+# VNPAY Signature Fix - Progress Tracker
 
-## Bugs Found & Fix Plan
+## ✅ PHASE 1: DIAGNOSE (Hoàn thành)
+- [x] search_files → Identify VNPAY files  
+- [x] read_file: VNPayUtil.java, PaymentServiceImpl.java, VNPayConfig.java, application.properties, PaymentController.java
+- [x] Analysis: Code đúng 100%, issue ở config/returnUrl/extra-params
+- [x] Plan approved by user
 
-### CRITICAL
-- [ ] BUG-1: `cancelBooking()` checks `"CONFIRMED"` (không tồn tại trong enum) → không bảo vệ được booking PAID
-- [ ] BUG-2: `cancelBooking()` không gọi `releaseSeats()` / `cancelTickets()` → ghế bị kẹt
-- [ ] BUG-3: `occupySeats()` set `isAvailable=false` global (không per-showtime) → ghế bị block toàn bộ suất chiếu
+## ✅ PHASE 2.1 COMPLETE: PaymentServiceImpl.java
+- [x] 2.1 Add `isValidVNPayParams()` → Reject non-vnp_* params (fix extra params)
+- [x] Detailed params logging → DEBUG all callback params  
+- [x] Error code 98 "Invalid Params"
 
-### HIGH
-- [ ] BUG-4: `releaseSeats()` set `isAvailable=true` vô điều kiện → re-enable ghế bị admin disable
-- [ ] BUG-5: `occupySeats()` chỉ gọi khi payment chưa tồn tại → ghế không được lock khi payment đã có
-- [ ] BUG-6: `autoExpireBookings()` load toàn bộ PENDING vào memory + race condition + 1 transaction cho tất cả
-- [ ] BUG-7: `findActiveBookingsByShowtimeId()` dùng `'CONFIRMED'` không tồn tại → luôn trả về rỗng
+## 🔄 PHASE 2: QUICK FIXES (Tiếp tục)
+- [ ] 2.2 VNPayConfig.java: @PostConstruct validation (TmnCode/HashSecret not null/empty)
+- [ ] 2.3 PaymentController.java: Enhanced logging + param size check
 
-### MEDIUM
-- [ ] BUG-8: `checkAndAutoExpire()` không throw exception rõ ràng → caller nhận lỗi gây nhầm lẫn
-- [ ] BUG-9: `seatStatusMap.putIfAbsent()` không ưu tiên OCCUPIED > RESERVED → hiển thị sai status
-- [ ] BUG-10: `createBooking()` không check `seat.isAvailable` → có thể book ghế bị admin disable
+## ⏳ PHASE 3: PRODUCTION READY  
+- [ ] 3.1 VNPayUtil: Add vnp_SecureHashType="HmacSHA512"
+- [ ] 3.2 IPN IP whitelist (optional)
 
-## Files To Edit
+## 🧪 PHASE 4: TESTING
+- [ ] **TEST BÂY GIỜ**: `mvn spring-boot:run` → create payment → check DEBUG logs
+- [ ] Share logs HashData create vs callback để confirm fix
 
-- [ ] `BookingRepository.java` — fix query CONFIRMED, thêm `findExpiredPendingBookings()`
-- [ ] `BookingServiceImpl.java` — fix `cancelBooking()`, fix `createBooking()`
-- [ ] `BookingStatusServiceImpl.java` — fix `occupySeats()`, `releaseSeats()`, `handlePaidTransition()`, `autoExpireBookings()`, `checkAndAutoExpire()`
-- [ ] `SeatServiceImpl.java` — fix priority map trong `getSeatAvailability()`
+## ⏳ PHASE 3: PRODUCTION READY
+- [ ] 3.1 VNPayUtil.java: Add vnp_SecureHashType="HmacSHA512" explicit
+- [ ] 3.2 Add IPN IP whitelist (optional)
 
-## Progress
+## 🧪 PHASE 4: TESTING
+- [ ] 4.1 Local test: mvn spring-boot:run → create payment → manual callback verify
+- [ ] 4.2 Share DEBUG logs với user để confirm fix
 
-- [ ] Step 1: Fix `BookingRepository.java`
-- [ ] Step 2: Fix `BookingServiceImpl.java`
-- [ ] Step 3: Fix `BookingStatusServiceImpl.java`
-- [ ] Step 4: Fix `SeatServiceImpl.java`
-- [ ] Step 5: Verify & test
+**Next step:** Implement 2.1 → Update TODO.md after each completion

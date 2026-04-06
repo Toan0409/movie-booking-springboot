@@ -91,6 +91,12 @@ public class SecurityConfig {
                                 "/api/auth/**")
                         .permitAll()
 
+                        // VNPAY callback endpoints — KHONG can JWT
+                        // IPN: VNPAY server goi truc tiep (khong co token)
+                        // Return: VNPAY redirect user ve (khong co token)
+                        .requestMatchers("/api/payment/vnpay/ipn", "/api/payment/vnpay/return")
+                        .permitAll()
+
                         // Cho phép Swagger UI
                         .requestMatchers(
                                 "/swagger-ui/**",

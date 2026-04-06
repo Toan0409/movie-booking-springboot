@@ -23,4 +23,14 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
      * Find payment by payment code
      */
     Optional<Payment> findByPaymentCode(String paymentCode);
+
+    /**
+     * Find payment by VNPAY transaction ID (vnp_TransactionNo)
+     */
+    Optional<Payment> findByTransactionId(String transactionId);
+
+    /**
+     * Find all payments by status
+     */
+    java.util.List<Payment> findByStatus(String status);
 }
