@@ -189,7 +189,8 @@ public class BookingServiceImpl implements BookingService {
 
     /**
      * Hủy tất cả tickets liên quan đến booking.
-     * NOTE: Không thay đổi seat.isAvailable vì PENDING booking không thay đổi isAvailable.
+     * NOTE: Không thay đổi seat.isAvailable vì PENDING booking không thay đổi
+     * isAvailable.
      * isAvailable chỉ dùng cho admin-disabled seats (FIX BUG-3/4).
      */
     private void cancelTicketsForBooking(Booking booking) {
@@ -210,4 +211,6 @@ public class BookingServiceImpl implements BookingService {
         } while (bookingRepository.existsByBookingCode(code));
         return code;
     }
+
+    
 }

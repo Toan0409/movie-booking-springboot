@@ -13,4 +13,5 @@ public interface BookingService {
     List<BookingResponseDTO> getUserBookings(Long userId);
 
     void cancelBooking(String bookingCode);
+
 }
