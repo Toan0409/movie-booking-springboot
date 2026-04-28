@@ -7,7 +7,11 @@ import com.cinema.movie_booking.entity.Movie;
 import com.cinema.movie_booking.mapper.MovieMapper;
 import com.cinema.movie_booking.repository.MovieRepository;
 import com.cinema.movie_booking.service.ChatbotService;
+import com.cinema.movie_booking.service.GeminiService;
+
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +24,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ChatbotServiceImpl implements ChatbotService {
 
     private final MovieRepository movieRepository;
     private final MovieMapper movieMapper;
+    private final GeminiService geminiService;
 
     @Override
     public ChatResponseDTO chat(ChatRequestDTO request, Pageable pageable) {
@@ -31,7 +37,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         String message = rawMessage.toLowerCase(Locale.ROOT).trim();
 
         if (message.isBlank()) {
-            return politeFallback();
+            return politeFallback(message);
         }
 
         List<Movie> movies;
@@ -51,12 +57,13 @@ public class ChatbotServiceImpl implements ChatbotService {
             botMessage = "Gợi ý phim phù hợp đi cùng gia đình:";
         } else if (containsAny(message, "kinh dị", "horror")) {
             movies = recommendByGenre("horror");
-            botMessage = containsAny(message, "top") ? "Top phim kinh dị nổi bật:" : "Các phim kinh dị bạn có thể quan tâm:";
+            botMessage = containsAny(message, "top") ? "Top phim kinh dị nổi bật:"
+                    : "Các phim kinh dị bạn có thể quan tâm:";
         } else if (containsAny(message, "top")) {
             movies = recommendTop();
             botMessage = "Top phim nổi bật hiện tại:";
         } else {
-            return politeFallback();
+            return politeFallback(message);
         }
 
         List<MovieResponseDTO> responseMovies = movies.stream()
@@ -112,7 +119,8 @@ public class ChatbotServiceImpl implements ChatbotService {
     private Comparator<Movie> byRatingDescThenReleaseDateDesc() {
         return Comparator
                 .comparing((Movie m) -> m.getRating() == null ? 0.0 : m.getRating(), Comparator.reverseOrder())
-                .thenComparing(m -> m.getReleaseDate() == null ? LocalDate.MIN : m.getReleaseDate(), Comparator.reverseOrder());
+                .thenComparing(m -> m.getReleaseDate() == null ? LocalDate.MIN : m.getReleaseDate(),
+                        Comparator.reverseOrder());
     }
 
     private boolean containsAny(String text, String... keywords) {
@@ -130,10 +138,41 @@ public class ChatbotServiceImpl implements ChatbotService {
         return Math.min(size, 10);
     }
 
-    private ChatResponseDTO politeFallback() {
+    private ChatResponseDTO politeFallback(String message) {
+        List<Movie> nowShowingMovies = movieRepository.findByIsNowShowingTrueAndIsDeletedFalse();
+        String movieContext = buildMovieContext(nowShowingMovies);
+        String aiResponse;
+
+        try {
+            aiResponse = geminiService.generateResponse(message, movieContext);
+        } catch (Exception e) {
+            log.error("Gemini API error: {}", e.getMessage());
+            aiResponse = "Xin lỗi, tôi gặp lỗi kỹ thuật. Hãy thử hỏi về thể loại phim cụ thể (hành động, tình cảm, kinh dị, gia đình, tối nay, top phim) nhé! 😊";
+        }
+
         return ChatResponseDTO.builder()
                 .movies(List.of())
-                .message("Xin lỗi, tôi hiện hỗ trợ tư vấn phim đang chiếu theo thể loại (hành động, tình cảm, kinh dị), phim gia đình, phim tối nay và top phim. Bạn thử hỏi theo các chủ đề này nhé.")
+                .message(
+                        "Xin lỗi, tôi hiện hỗ trợ tư vấn phim đang chiếu theo thể loại (hành động, tình cảm, kinh dị), phim gia đình, phim tối nay và top phim. Bạn thử hỏi theo các chủ đề này nhé.")
+                .message(aiResponse)
                 .build();
+    }
+
+    private String buildMovieContext(List<Movie> movies) {
+        if (movies.isEmpty()) {
+            return "Không có phim nào đang chiếu.";
+        }
+
+        return movies.stream()
+                .limit(20) // Limit context length
+                .map(movie -> {
+                    String genreName = movie.getGenre() != null ? movie.getGenre().getName() : "Không xác định";
+                    String status = Boolean.TRUE.equals(movie.getIsNowShowing()) ? "Đang chiếu" : "Sắp chiếu";
+                    return String.format("- %s (Thể loại: %s, Rating: %.1f, %s)",
+                            movie.getTitle(), genreName,
+                            movie.getRating() != null ? movie.getRating() : 0.0,
+                            status);
+                })
+                .collect(Collectors.joining("\n"));
     }
 }

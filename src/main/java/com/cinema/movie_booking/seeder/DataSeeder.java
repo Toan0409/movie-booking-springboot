@@ -174,7 +174,7 @@ public class DataSeeder implements CommandLineRunner {
         }
         log.info("[Movie] Fetching from TMDB...");
 
-        List<TmdbMovieDTO> nowPlaying = tmdbApiService.fetchNowPlayingMovies(2);
+        List<TmdbMovieDTO> nowPlaying = tmdbApiService.fetchNowPlayingMovies(5);
         List<TmdbMovieDTO> popular = tmdbApiService.fetchPopularMovies(1);
 
         Map<Long, TmdbMovieDTO> deduped = new LinkedHashMap<>();
@@ -182,8 +182,8 @@ public class DataSeeder implements CommandLineRunner {
         popular.forEach(m -> deduped.putIfAbsent(m.getId(), m));
 
         List<TmdbMovieDTO> movies = new ArrayList<>(deduped.values());
-        if (movies.size() > 20)
-            movies = movies.subList(0, 20);
+        if (movies.size() > 70)
+            movies = movies.subList(0, 70);
 
         // Build genre map via MovieSeederService (goes through Spring proxy →
         // @Transactional works)
