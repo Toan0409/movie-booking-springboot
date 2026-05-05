@@ -5,5 +5,5 @@ import com.cinema.movie_booking.dto.chatbot.ChatResponseDTO;
 import org.springframework.data.domain.Pageable;
 
 public interface ChatbotService {
-    ChatResponseDTO chat(ChatRequestDTO request, Pageable pageable);
+    ChatResponseDTO chat(ChatRequestDTO request, Long userId, Pageable pageable);
 }

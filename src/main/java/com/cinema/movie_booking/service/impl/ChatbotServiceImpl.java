@@ -1,17 +1,18 @@
 package com.cinema.movie_booking.service.impl;
 
+import com.cinema.movie_booking.dto.chatbot.ChatMessageDTO;
 import com.cinema.movie_booking.dto.chatbot.ChatRequestDTO;
 import com.cinema.movie_booking.dto.chatbot.ChatResponseDTO;
 import com.cinema.movie_booking.dto.movie.MovieResponseDTO;
+import com.cinema.movie_booking.entity.ChatMessage;
 import com.cinema.movie_booking.entity.Movie;
 import com.cinema.movie_booking.mapper.MovieMapper;
+import com.cinema.movie_booking.repository.ChatMessageRepository;
 import com.cinema.movie_booking.repository.MovieRepository;
 import com.cinema.movie_booking.service.ChatbotService;
 import com.cinema.movie_booking.service.GeminiService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -30,16 +31,59 @@ public class ChatbotServiceImpl implements ChatbotService {
     private final MovieRepository movieRepository;
     private final MovieMapper movieMapper;
     private final GeminiService geminiService;
+    private final ChatMessageRepository chatMessageRepository;
 
     @Override
-    public ChatResponseDTO chat(ChatRequestDTO request, Pageable pageable) {
+    public ChatResponseDTO chat(ChatRequestDTO request, Long userId, Pageable pageable) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID is required for chat history");
+        }
+
+        List<ChatMessageDTO> existingHistory = chatMessageRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .getContent()
+                .stream()
+                .map(ChatMessageDTO::fromEntity)
+                .collect(Collectors.toList());
+
         String rawMessage = request != null && request.getMessage() != null ? request.getMessage() : "";
         String message = rawMessage.toLowerCase(Locale.ROOT).trim();
 
         if (message.isBlank()) {
-            return politeFallback(message);
+            return ChatResponseDTO.builder()
+                    .movies(List.of())
+                    .message("Tin nhắn không được để trống.")
+                    .history(existingHistory)
+                    .build();
         }
 
+        chatMessageRepository.save(ChatMessage.builder()
+                .userId(userId)
+                .role(ChatMessage.MessageRole.USER)
+                .message(rawMessage)
+                .build());
+
+        ChatResponseDTO botResponse = buildBotResponse(message, pageable);
+
+        chatMessageRepository.save(ChatMessage.builder()
+                .userId(userId)
+                .role(ChatMessage.MessageRole.BOT)
+                .message(botResponse.getMessage())
+                .build());
+
+        List<ChatMessageDTO> updatedHistory = chatMessageRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .getContent()
+                .stream()
+                .map(ChatMessageDTO::fromEntity)
+                .collect(Collectors.toList());
+
+        return ChatResponseDTO.builder()
+                .movies(botResponse.getMovies())
+                .message(botResponse.getMessage())
+                .history(updatedHistory)
+                .build();
+    }
+
+    private ChatResponseDTO buildBotResponse(String message, Pageable pageable) {
         List<Movie> movies;
         String botMessage;
 
@@ -57,7 +101,8 @@ public class ChatbotServiceImpl implements ChatbotService {
             botMessage = "Gợi ý phim phù hợp đi cùng gia đình:";
         } else if (containsAny(message, "kinh dị", "horror")) {
             movies = recommendByGenre("horror");
-            botMessage = containsAny(message, "top") ? "Top phim kinh dị nổi bật:"
+            botMessage = containsAny(message, "top")
+                    ? "Top phim kinh dị nổi bật:"
                     : "Các phim kinh dị bạn có thể quan tâm:";
         } else if (containsAny(message, "top")) {
             movies = recommendTop();
@@ -119,7 +164,8 @@ public class ChatbotServiceImpl implements ChatbotService {
     private Comparator<Movie> byRatingDescThenReleaseDateDesc() {
         return Comparator
                 .comparing((Movie m) -> m.getRating() == null ? 0.0 : m.getRating(), Comparator.reverseOrder())
-                .thenComparing(m -> m.getReleaseDate() == null ? LocalDate.MIN : m.getReleaseDate(),
+                .thenComparing(
+                        m -> m.getReleaseDate() == null ? LocalDate.MIN : m.getReleaseDate(),
                         Comparator.reverseOrder());
     }
 
@@ -152,8 +198,6 @@ public class ChatbotServiceImpl implements ChatbotService {
 
         return ChatResponseDTO.builder()
                 .movies(List.of())
-                .message(
-                        "Xin lỗi, tôi hiện hỗ trợ tư vấn phim đang chiếu theo thể loại (hành động, tình cảm, kinh dị), phim gia đình, phim tối nay và top phim. Bạn thử hỏi theo các chủ đề này nhé.")
                 .message(aiResponse)
                 .build();
     }
@@ -164,7 +208,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         }
 
         return movies.stream()
-                .limit(20) // Limit context length
+                .limit(20)
                 .map(movie -> {
                     String genreName = movie.getGenre() != null ? movie.getGenre().getName() : "Không xác định";
                     String status = Boolean.TRUE.equals(movie.getIsNowShowing()) ? "Đang chiếu" : "Sắp chiếu";
